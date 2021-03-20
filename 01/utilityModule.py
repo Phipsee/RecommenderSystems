@@ -1,5 +1,5 @@
 class Statistics:
-    def computeMeanRating (fileName):
+    def computeMeanRating(fileName):
         try:
             ratings_file = open(fileName)
         except OSError:
