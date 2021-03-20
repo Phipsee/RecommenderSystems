@@ -20,14 +20,11 @@ def computeMeanMedianMode (fileName):
             
     ratings_file.close()
 
-    stars = {};
-    for i in range(1,11):
-        stars[0.5*i] = 0
-    
+    stars = {};  
     sum = 0
     for rating in ratings:
         sum += float(rating)
-        stars[float(rating)] = stars[float(rating)]+1
+        stars[float(rating)] = stars[float(rating)]+1 if float(rating) in stars else 1
 
     if len(ratings) % 2 == 1:
         median = ratings[len(ratings)/2]
