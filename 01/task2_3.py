@@ -1,4 +1,4 @@
-def computeMeanMedianMode (fileName):
+def computeMeanMedianMode(fileName):
     try:
         ratings_file = open(fileName)
     except OSError:
