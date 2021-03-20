@@ -1,6 +1,6 @@
 import csv
 
-def getFileContentInfo (fileName):
+def getFileContentInfo(fileName):
     try:
         enc = 'utf-8'
         plainFile = open(fileName, encoding=enc)
