@@ -31,7 +31,9 @@ def computeMeanMedianMode(fileName):
     else:
         median = ratings[int((len(ratings)/2+len(ratings)/2+1)/2)]  
 
-    mode = 0.5
+    #Get first key from map
+    mode = list(stars.keys())[0]
+    print(mode)
     for key in stars:
         if stars[key] > stars[mode]:
             mode = key

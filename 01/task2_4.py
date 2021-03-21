@@ -28,8 +28,8 @@ def getFileContentInfo(fileName):
 
     print('Genres and Movies per Genre')
     print('---------------------------')
-    for key in genres:
-        print(key, ' ',  genres[key])
+    for genre_tuple in sorted(genres.items(), key=lambda x : x[1], reverse=True):
+        print(genre_tuple[0], ' ', genre_tuple[1])
         
     print('---------------------------')  
     print('Most popular Genre: ', max(genres, key=genres.get))
