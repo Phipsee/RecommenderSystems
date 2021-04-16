@@ -1,10 +1,31 @@
 import pandas as pd
 import numpy as np
+import math
 
-def showTitlesAndGenresOfUser(userid):
+def showTitlesAndGenresOfUser():
     movieRatings = ratings.merge(movies)
-    print(movieRatings.loc[movieRatings['user_id'] == 1].head(15))
-    
+    print(movieRatings.loc[movieRatings['user_id'] == int(userId)].head(15))
+
+def calcUserSimilarity():
+    userSimilarity = pd.DataFrame(index = [userId], columns = users['user_id'])
+    userAverages = userItems.mean(axis = 1)
+    moviesOfUser = userItems.loc[int(userId)].dropna().index
+    for i in userSimilarity.columns:
+        upperSum = 0
+        lowerSum1 = 0
+        lowerSum2 = 0
+        for movieId in moviesOfUser:
+            if userItems.loc[i][movieId] >= 0:
+                upperSum += (userItems.loc[int(userId)][movieId] - userAverages.loc[int(userId)]) * (userItems.loc[i][movieId] - userAverages.loc[i])
+                lowerSum1 += (userItems.loc[int(userId)][movieId] - userAverages.loc[int(userId)]) ** 2
+                lowerSum2 += (userItems.loc[i][movieId] - userAverages.loc[i]) ** 2
+        if lowerSum1 == 0 or lowerSum2 == 0:
+            userSimilarity.loc[userId][i] = 0
+        else:    
+            userSimilarity.loc[userId][i] = upperSum / (math.sqrt(lowerSum1) * math.sqrt(lowerSum2))
+
+    return userSimilarity.sort_values(by = userId, ascending = False, axis = 1)   
+
     
 # Load datasets
 users = pd.read_csv('./ml-1m/users.csv')
@@ -13,9 +34,15 @@ ratings = pd.read_csv('./ml-1m/ratings.csv')
 
 # Get a user id
 while True:
-    userid = input('Enter a user id: ')
-    if (users['user_id'] == int(userid)).any():
+    userId = input('Enter a user id: ')
+    if (users['user_id'] == int(userId)).any():
         break
     print('There is no such user id.')
 
-showTitlesAndGenresOfUser(userid)
+showTitlesAndGenresOfUser()
+
+#create user item table
+userItems = pd.pivot_table(ratings, index = 'user_id', columns = 'movie_id', values = 'rating')
+
+userSimilarity = calcUserSimilarity()
+print(userSimilarity)
