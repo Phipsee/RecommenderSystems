@@ -26,6 +26,21 @@ def calcUserSimilarity():
 
     return userSimilarity.sort_values(by = userId, ascending = False, axis = 1)   
 
+def getPredictions(n):
+    neighbors = userSimilarity.iloc[:,:n]
+    userAverages = userItems.mean(axis = 1)
+    moviesOfUser = userItems.loc[userId].dropna().index
+    predictions = userItems.loc[userId].drop(moviesOfUser)
+    for movieId in userItems.columns:
+        if movieId not in moviesOfUser:
+            upperSum = 0
+            lowerSum = 0
+            for n in neighbors.columns:
+                if not math.isnan(userItems.loc[n][movieId]):
+                    upperSum += neighbors.loc[userId][n] * (userItems.loc[n][movieId] - userAverages.loc[n])
+                    lowerSum += neighbors.loc[userId][n]        
+            if lowerSum != 0 : predictions.loc[movieId] = userAverages.loc[userId] + upperSum / lowerSum
+    return predictions.sort_values(ascending = False, axis = 0)
     
 # Load datasets
 users = pd.read_csv('./ml-1m/users.csv')
@@ -45,4 +60,8 @@ showTitlesAndGenresOfUser()
 userItems = pd.pivot_table(ratings, index = 'user_id', columns = 'movie_id', values = 'rating')
 
 userSimilarity = calcUserSimilarity()
-print(userSimilarity)
+
+predictions = getPredictions(150)
+
+for id in predictions.head(10).index:
+    print(movies.loc[movies['movie_id'] == id])
