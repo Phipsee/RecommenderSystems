@@ -4,7 +4,7 @@ import math
 
 def showTitlesAndGenresOfUser():
     movieRatings = ratings.merge(movies)
-    print(movieRatings.loc[movieRatings['user_id'] == userId].head(15))
+    print(movieRatings.loc[movieRatings['user_id'] == userId, ['movie', 'genres']].head(15))
 
 def calcUserSimilarity():
     userSimilarity = pd.DataFrame(index = [userId], columns = users['user_id'])
