@@ -80,7 +80,7 @@ userItems = pd.pivot_table(ratings, index = 'user_id', columns = 'movie_id', val
 userSimilarity = calcUserSimilarity()
 
 # Get n predictions
-predictions = getPredictions(150)
+predictions = getPredictions(50)
 
 
 for id in predictions.head(10).index:
