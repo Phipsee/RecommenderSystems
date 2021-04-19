@@ -32,11 +32,11 @@ def calcUserSimilarity():
         else:
             # Save to userSimilarity
             userSimilarity.loc[userId][i] = upperSum / (math.sqrt(lowerSum1) * math.sqrt(lowerSum2))
-
+    # return the userSimilarity sorted descending
     return userSimilarity.sort_values(by = userId, ascending = False, axis = 1)   
 
 def getPredictions(n):
-    #
+    # Get n neighbors according to the similarity
     neighbors = userSimilarity.iloc[:,:n]
     # Calculate the mean rating of all users
     userAverages = userItems.mean(axis = 1)
