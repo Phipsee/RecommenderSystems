@@ -73,7 +73,7 @@ def calculateSimilarity(userProfile, ratedMovies):
     # Filter out movies with similarity <= 0
     recoms = recoms.loc[recoms['sim'] > 0]
 
-    # Merge recommendations with ratings and group by ?
+    # Merge recommendations with ratings and group by movie_id (other columns only there for visualization)
     recomsGrouped = recoms.merge(ratings, on=['movie_id']).groupby(['movie_id','movie_x', 'genres_x', 'sim', 'genre_counter']).size().reset_index(name='counts')
 
     # Sort by sim - genre_counter - counts descending
