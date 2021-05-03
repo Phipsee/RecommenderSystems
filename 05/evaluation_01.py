@@ -7,7 +7,7 @@ import math
 # Load datasets and return them
 def loadDatasets(sample):
     if sample:
-        ratings = pd.read_csv('./ml-1m/ratings.csv').sample(frac=0.001)
+        ratings = pd.read_csv('./ml-1m/ratings.csv').sample(frac=0.01)
 
         users = pd.read_csv('./ml-1m/users.csv')
         users = users[users['user_id'].isin(ratings['user_id'])]
@@ -23,24 +23,23 @@ def loadDatasets(sample):
     return users, movies, ratings
 
 # Create trainingsset with the ration of the training- to testset
-
-
 def createTrainingsAndTestset(ratio, set):
     trainings_set = set.sample(frac=ratio, random_state=100)
     test_set = set.drop(trainings_set.index)
 
     return trainings_set, test_set
 
-
+# Get a User which is available in the data set
 def inputUserId():
     # Get a user id
     userId = ratings['user_id'].iloc[0]
     print('Values for user: '+str(userId))
     return userId
 
-
+# Calculate nearest MAE, RMSE, precision and recall
 def nearestNeighbour(user_id, users, movies, ratings, test_set, neighborSize):
-   result, ranked_list = NearestNeighbor(users, movies, ratings,user_id, neighborSize).nearestNeighborTestSet(test_set)
+   NN = NearestNeighbor(users, movies, ratings, user_id, neighborSize)
+   result = NN.task_1(test_set)
    result = result.dropna()
 
    print("TASK 1 _________________________________________")
@@ -63,16 +62,7 @@ def nearestNeighbour(user_id, users, movies, ratings, test_set, neighborSize):
    print('MAE: '+str(sum_mae))
    print('RMSE: '+str(sum_rmse))
 
-   print("TASK 2 _________________________________________")
-   tp = ranked_list[ranked_list['rating'] > 3].size
-   fp = ranked_list.size()
-   p = tp / (tp/fp)
-   print('Precision: '+str(p))
-
-   tp = ranked_list[ranked_list['rating'] > 3].size
-   fn = ranked_list[ranked_list['rating'] > 3].size
-   r = tp / (tp/fn)
-   print('Recall: '+str(r))
+   NN.task_2()
 
 users, movies, ratings = loadDatasets(True)
 userId = inputUserId()
@@ -80,9 +70,8 @@ userId = inputUserId()
 if(math.isnan(userId)):
     exit()
 
+# Import data and create trainings and testset
 ratings_training, ratings_test = createTrainingsAndTestset(0.8, ratings)
-
-ratings_test = ratings_test[ratings_test['user_id'] == userId]
 
 nearestNeighbour(userId, users, movies, ratings_training, ratings_test, 100)
 

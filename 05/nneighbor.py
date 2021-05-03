@@ -12,11 +12,7 @@ class NearestNeighbor(object):
         self.userId = userId
         self.neighbor_size = neighbor_size
 
-    def showTitlesAndGenresOfUser(self):
-        movieRatings = self.ratings.merge(self.movies)
-        print(movieRatings.loc[movieRatings['user_id'] ==
-                               self.userId, ['movie', 'genres']].head(15))
-
+    # calculate the similarities for between ALL users
     def calcUserSimilarity(self):
         # Create a dataframe user-user to save the value of similarity
         self.userSimilarity = pd.DataFrame(
@@ -60,6 +56,7 @@ class NearestNeighbor(object):
         self.userSimilarity.to_csv()
         return self.userSimilarity
 
+    # Get prediction for user from test set
     def getPredictionsTestset(self, n, test_set, user_id):
         # Get n neighbors according to the similarity
         neighbors = self.userSimilarity.iloc[:, :n]
@@ -74,9 +71,6 @@ class NearestNeighbor(object):
             print('This user does not have any movies in testset... '+str(user_id))
             return predictions
         moviesOfUser = self.userItems.loc[user_id].dropna().index
-
-
-
 
         for movieId in self.userItems.columns:
             if movieId not in moviesOfUser:
@@ -98,8 +92,8 @@ class NearestNeighbor(object):
                         upperSum / lowerSum
         return predictions
 
+    # Predict ratings for a certain user for this test_set
     def task_1(self, test_set):
-        self.showTitlesAndGenresOfUser()
 
         # create user item table
         self.userItems = pd.pivot_table(
@@ -111,12 +105,12 @@ class NearestNeighbor(object):
         # Get n predictions
         predictions = self.getPredictionsTestset(self.neighbor_size, test_set, self.userId)
 
-        # for id in predictions.head(10).index:
-        #   print(self.movies.loc[self.movies['movie_id'] == id])
         comparison_df = predictions.merge(test_set, on='movie_id')
 
         return comparison_df
 
+
+    # Predict ratings for all users and select the ten movies and show recall and precision
     def task_2(self, test_set):
 
         predicted_rating = pd.DataFrame()
@@ -126,9 +120,22 @@ class NearestNeighbor(object):
             count = count +1
             self.user_id = user_id
             predictions = self.getPredictionsTestset(self.neighbor_size, test_set, user_id)
-            predicted_rating = predicted_rating.append(predictions)
+            #predicted_rating = predicted_rating.append(predictions)
+            print(predicted_rating)
+            if predicted_rating.size <= 0:
+                continue
+            ranked_list = predicted_rating.merge(test_set, on='movie_id').sort_values(by=['rating_predicted'], ascending=False).head(10)
+            print("TASK 2 _________________________________________")
+            tp = ranked_list[ranked_list['rating'] > 3].size
+            fp = ranked_list.size()
+            p = tp / (tp / fp)
+            print('Precision: ' + str(p))
 
-
+            tp = ranked_list[ranked_list['rating'] > 3].size
+            fn = ranked_list[ranked_list['rating'] > 3].size
+            r = tp / (tp / fn)
+            print('Recall: ' + str(r))
+            print(ranked_list.to_string)
 
         return predicted_rating.sort_values(by=['rating_predicted'], ascending=False).head(10)
 
