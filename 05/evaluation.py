@@ -62,7 +62,7 @@ def nearestNeighbour(user_id, users, movies, ratings, test_set, neighborSize):
    print('MAE: '+str(sum_mae))
    print('RMSE: '+str(sum_rmse))
 
-   NN.task_2()
+   NN.task_2(test_set)
 
 users, movies, ratings = loadDatasets(True)
 userId = inputUserId()
