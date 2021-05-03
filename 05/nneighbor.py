@@ -20,38 +20,45 @@ class NearestNeighbor(object):
     def calcUserSimilarity(self):
         # Create a dataframe user-user to save the value of similarity
         self.userSimilarity = pd.DataFrame(
-            index=[self.userId], columns=self.users['user_id'])
+            index=self.users['user_id'], columns=self.users['user_id'])
         # Calculate the mean rating of all users
         self.userAverages = self.userItems.mean(axis=1)
-        # Get all rated movies from the selected user (drop movies without rating)
-        moviesOfUser = self.userItems.loc[self.userId].dropna().index
+        count = 0
+        for selected_user in self.userSimilarity.index:
+            print(str(count) + " of " + str(self.userSimilarity.index.size))
+            count = count + 1
+            # Get all rated movies from the selected user (drop movies without rating)
+            if selected_user not in self.userItems.index:
+                continue
+            moviesOfUser = self.userItems.loc[selected_user].dropna().index
 
-        # For each user calculate sim(a, b)
-        for i in self.userSimilarity.columns:
-            upperSum = 0
-            lowerSum1 = 0
-            lowerSum2 = 0
-            # Calculate the three sums for each movie
-            for movieId in moviesOfUser:
-                if movieId not in self.userItems.columns:
-                    continue
-                if self.userItems.loc[i][movieId] >= 0:
-                    # Calculate according to formula
-                    upperSum += (self.userItems.loc[self.userId][movieId] - self.userAverages.loc[self.userId]) * (
-                        self.userItems.loc[i][movieId] - self.userAverages.loc[i])
-                    lowerSum1 += (self.userItems.loc[self.userId]
-                                  [movieId] - self.userAverages.loc[self.userId]) ** 2
-                    lowerSum2 += (self.userItems.loc[i]
-                                  [movieId] - self.userAverages.loc[i]) ** 2
-            # Check for division by zero
-            if lowerSum1 == 0 or lowerSum2 == 0:
-                self.userSimilarity.loc[self.userId][i] = 0
-            else:
-                # Save to userSimilarity
-                self.userSimilarity.loc[self.userId][i] = upperSum / \
-                    (math.sqrt(lowerSum1) * math.sqrt(lowerSum2))
+            # For each user calculate sim(a, b)
+            for i in self.userSimilarity.columns:
+                upperSum = 0
+                lowerSum1 = 0
+                lowerSum2 = 0
+                # Calculate the three sums for each movie
+                for movieId in moviesOfUser:
+                    if movieId not in self.userItems.columns or i not in self.userItems.index:
+                        continue
+                    if self.userItems.loc[i][movieId] >= 0:
+                        # Calculate according to formula
+                        upperSum += (self.userItems.loc[selected_user][movieId] - self.userAverages.loc[selected_user]) * (
+                            self.userItems.loc[i][movieId] - self.userAverages.loc[i])
+                        lowerSum1 += (self.userItems.loc[selected_user]
+                                      [movieId] - self.userAverages.loc[selected_user]) ** 2
+                        lowerSum2 += (self.userItems.loc[i]
+                                      [movieId] - self.userAverages.loc[i]) ** 2
+                # Check for division by zero
+                if lowerSum1 == 0 or lowerSum2 == 0:
+                    self.userSimilarity.loc[selected_user][i] = 0
+                else:
+                    # Save to userSimilarity
+                    self.userSimilarity.loc[self.userId][i] = upperSum / \
+                        (math.sqrt(lowerSum1) * math.sqrt(lowerSum2))
         # return the userSimilarity sorted descending
-        return self.userSimilarity.sort_values(by=self.userId, ascending=False, axis=1)
+        self.userSimilarity.to_csv()
+        return self.userSimilarity
 
     def getPredictionsTestset(self, n, test_set, user_id):
         # Get n neighbors according to the similarity
@@ -59,11 +66,17 @@ class NearestNeighbor(object):
         # Calculate the mean rating of all users
         userAverages = self.userItems.mean(axis=1)
         # Get all rated movies from the test set
-        moviesOfUser = self.userItems.loc[user_id].dropna().index
-
 
         # Get all movie which have not been rated
         predictions = pd.DataFrame(index=test_set['movie_id'], columns=['rating_predicted'])
+
+        if user_id not in self.userItems.index:
+            print('This user does not have any movies in testset... '+str(user_id))
+            return predictions
+        moviesOfUser = self.userItems.loc[user_id].dropna().index
+
+
+
 
         for movieId in self.userItems.columns:
             if movieId not in moviesOfUser:
@@ -71,7 +84,7 @@ class NearestNeighbor(object):
                 lowerSum = 0
                 # Calculate prediction according to formula
                 for n in neighbors.columns:
-                    if user_id not in self.userItems.index or user_id not in neighbors.index:
+                    if user_id not in self.userItems.index or user_id not in neighbors.index or movieId not in self.userItems.columns or n not in self.userItems.index:
                         continue
                     if not math.isnan(self.userItems.loc[n][movieId]):
                         # similarity times (rating of the user subtracted by mean rating)
@@ -107,15 +120,15 @@ class NearestNeighbor(object):
     def task_2(self, test_set):
 
         predicted_rating = pd.DataFrame()
-
         count = 0
         for user_id in self.userItems.index:
             print(str(count)+" of "+ str(self.userItems.index.size))
             count = count +1
             self.user_id = user_id
-            self.userSimilarity = self.calcUserSimilarity()
             predictions = self.getPredictionsTestset(self.neighbor_size, test_set, user_id)
             predicted_rating = predicted_rating.append(predictions)
+
+
 
         return predicted_rating.sort_values(by=['rating_predicted'], ascending=False).head(10)
 
@@ -124,8 +137,6 @@ class NearestNeighbor(object):
         comparison_df = self.task_1(test_set)
         ranked_list = self.task_2(test_set)
 
-        print(ranked_list)
-
-        return comparison_df
+        return comparison_df, ranked_list
 
 

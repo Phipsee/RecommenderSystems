@@ -7,9 +7,14 @@ import math
 # Load datasets and return them
 def loadDatasets(sample):
     if sample:
-        users = pd.read_csv('./ml-1m/users.csv').sample(frac=0.2)
-        movies = pd.read_csv('./ml-1m/movies.csv', encoding='ISO-8859-1').sample(frac=0.2)
-        ratings = pd.read_csv('./ml-1m/ratings.csv').sample(frac=0.2)
+        ratings = pd.read_csv('./ml-1m/ratings.csv').sample(frac=0.001)
+
+        users = pd.read_csv('./ml-1m/users.csv')
+        users = users[users['user_id'].isin(ratings['user_id'])]
+
+        movies = pd.read_csv('./ml-1m/movies.csv', encoding='ISO-8859-1')
+        movies = movies[movies['movie_id'].isin(ratings['movie_id'])]
+
     else:
         users = pd.read_csv('./ml-1m/users.csv')
         movies = pd.read_csv('./ml-1m/movies.csv', encoding='ISO-8859-1')
@@ -29,17 +34,13 @@ def createTrainingsAndTestset(ratio, set):
 
 def inputUserId():
     # Get a user id
-    while True:
-        userId = int(input('Enter a user id: '))
-        if (users['user_id'] == userId).any():
-            break
-        print('There is no such user id.')
-
+    userId = ratings['user_id'].iloc[0]
+    print('Values for user: '+str(userId))
     return userId
 
 
 def nearestNeighbour(user_id, users, movies, ratings, test_set, neighborSize):
-   result = NearestNeighbor(users, movies, ratings,user_id, neighborSize).nearestNeighborTestSet(test_set)
+   result, ranked_list = NearestNeighbor(users, movies, ratings,user_id, neighborSize).nearestNeighborTestSet(test_set)
    result = result.dropna()
 
    print("TASK 1 _________________________________________")
@@ -63,9 +64,17 @@ def nearestNeighbour(user_id, users, movies, ratings, test_set, neighborSize):
    print('RMSE: '+str(sum_rmse))
 
    print("TASK 2 _________________________________________")
+   tp = ranked_list[ranked_list['rating'] > 3].size
+   fp = ranked_list.size()
+   p = tp / (tp/fp)
+   print('Precision: '+str(p))
 
+   tp = ranked_list[ranked_list['rating'] > 3].size
+   fn = ranked_list[ranked_list['rating'] > 3].size
+   r = tp / (tp/fn)
+   print('Recall: '+str(r))
 
-users, movies, ratings = loadDatasets(False)
+users, movies, ratings = loadDatasets(True)
 userId = inputUserId()
 
 if(math.isnan(userId)):
