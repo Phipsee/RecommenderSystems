@@ -2,6 +2,6 @@
 
 <ul>
     {% for list in blog_list %}
-        <li>{{list}}</li>
+        <li><a href="/posts/{{list.id}}">{{list}}</a></li>
     {% endfor %}
 </ul>

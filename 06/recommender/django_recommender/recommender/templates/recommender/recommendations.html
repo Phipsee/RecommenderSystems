@@ -1,0 +1,13 @@
+<h1>Recommendations for user {{user_id}}</h1>
+
+<div>
+    {% for key, movie in movies.items %}
+        <ul>
+            {% for value in movie %}
+            <li>{{value}}</li>
+            {% endfor %}
+        </ul> 
+    {% endfor %}
+</div>
+
+<a href="/user">Back</a>
